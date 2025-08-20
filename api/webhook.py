@@ -41,6 +41,10 @@ def update_last_commit(repo_name, commit_msg, commit_date):
         }
         requests.patch(f"https://api.notion.com/v1/pages/{page_id}", headers=headers, json=data)
 
+@app.get("/")
+def root():
+    return {"status": "running"}
+
 @app.post("/api/webhook")
 async def webhook(request: Request):
     payload = await request.json()
