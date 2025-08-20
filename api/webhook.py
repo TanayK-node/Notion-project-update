@@ -16,21 +16,36 @@ app = FastAPI()
 
 def create_project_in_notion(repo_name, repo_url):
     data = {
-        "parent": { "database_id": DATABASE_ID },
+        "parent": {"database_id": DATABASE_ID},
         "properties": {
             "Name": {"title": [{"text": {"content": repo_name}}]},
             "GitHub Link": {"url": repo_url},
             "Status": {"select": {"name": "Ongoing"}},
         }
     }
-    requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
+    res = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
+
+    # 🔥 Logs
+    print("📌 Creating project in Notion...")
+    print("   Repo:", repo_name)
+    print("   URL:", repo_url)
+    print("   Status Code:", res.status_code)
+    print("   Response:", res.text)
+
 
 def update_last_commit(repo_name, commit_msg, commit_date):
-    query = requests.post(
+    query_res = requests.post(
         f"https://api.notion.com/v1/databases/{DATABASE_ID}/query",
         headers=headers,
         json={"filter": {"property": "Name", "title": {"equals": repo_name}}}
-    ).json()
+    )
+
+    query = query_res.json()
+
+    # 🔥 Logs for query
+    print("📌 Querying Notion DB for repo:", repo_name)
+    print("   Status Code:", query_res.status_code)
+    print("   Query Response:", query)
 
     if len(query.get("results", [])) > 0:
         page_id = query["results"][0]["id"]
@@ -40,7 +55,17 @@ def update_last_commit(repo_name, commit_msg, commit_date):
                 "Last Commit Date": {"date": {"start": commit_date}}
             }
         }
-        requests.patch(f"https://api.notion.com/v1/pages/{page_id}", headers=headers, json=data)
+        res = requests.patch(f"https://api.notion.com/v1/pages/{page_id}", headers=headers, json=data)
+
+        # 🔥 Logs for update
+        print("📌 Updating last commit...")
+        print("   Page ID:", page_id)
+        print("   Commit Msg:", commit_msg)
+        print("   Commit Date:", commit_date)
+        print("   Status Code:", res.status_code)
+        print("   Response:", res.text)
+    else:
+        print("⚠️ No page found in Notion for repo:", repo_name)
 
 @app.get("/")
 def root():
