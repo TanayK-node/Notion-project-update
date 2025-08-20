@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 import requests
 import os
 
-#testing1.0
+#testing1.1
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
 
@@ -64,9 +64,8 @@ def root():
     return {"status": "running"}
 
 @app.get("/api/webhook")
-def root():
-    return {"status": "running"}
-
+def webhook_status():
+    return {"status": "webhook endpoint active"}
 @app.post("/api/webhook")
 async def webhook(request: Request):
     payload = await request.json()
