@@ -26,7 +26,7 @@ def create_project_in_notion(repo_name, repo_url):
         "properties": {
             "Name": {"title": [{"text": {"content": repo_name}}]},
             "GitHub Link": {"url": repo_url},
-            "Status": {"status": {"name": "In progress"}},
+            "status": {"status": {"name": "In progress"}},
         }
     }
     response = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
