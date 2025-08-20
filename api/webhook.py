@@ -66,20 +66,25 @@ def root():
 @app.get("/api/webhook")
 def webhook_status():
     return {"status": "webhook endpoint active"}
+
 @app.post("/api/webhook")
 async def webhook(request: Request):
     payload = await request.json()
+    print("📥 Webhook received:", payload.keys())
 
     if "repository" in payload:
         repo_name = payload["repository"]["name"]
         repo_url = payload["repository"]["html_url"]
+        print(f"📌 Creating project in Notion: {repo_name} ({repo_url})")
         create_project_in_notion(repo_name, repo_url)
 
-    if "commits" in payload:
+    if "commits" in payload and payload["commits"]:
         repo_name = payload["repository"]["name"]
         last_commit = payload["commits"][-1]
         commit_msg = last_commit["message"]
         commit_date = last_commit["timestamp"]
+        print(f"📝 Updating last commit in Notion: {commit_msg} at {commit_date}")
         update_last_commit(repo_name, commit_msg, commit_date)
 
     return {"status": "ok"}
+
