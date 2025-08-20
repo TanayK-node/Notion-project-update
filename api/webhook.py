@@ -25,7 +25,7 @@ def create_project_in_notion(repo_name, repo_url):
         "parent": { "database_id": DATABASE_ID },
         "properties": {
             "Name": {"title": [{"text": {"content": repo_name}}]},
-            "Git Link": {"url": repo_url},
+            "Github Link": {"url": repo_url},
             "Status": {"status": {"name": "Ongoing"}},
         }
     }
