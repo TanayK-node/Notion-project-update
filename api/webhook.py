@@ -1,5 +1,4 @@
-# api/webhook.py
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, Request
 import requests
 import os
 
@@ -12,7 +11,7 @@ headers = {
     "Notion-Version": "2022-06-28"
 }
 
-app = Flask(__name__)
+app = FastAPI()
 
 def create_project_in_notion(repo_name, repo_url):
     data = {
@@ -32,7 +31,7 @@ def update_last_commit(repo_name, commit_msg, commit_date):
         json={"filter": {"property": "Name", "title": {"equals": repo_name}}}
     ).json()
 
-    if len(query["results"]) > 0:
+    if len(query.get("results", [])) > 0:
         page_id = query["results"][0]["id"]
         data = {
             "properties": {
@@ -42,9 +41,9 @@ def update_last_commit(repo_name, commit_msg, commit_date):
         }
         requests.patch(f"https://api.notion.com/v1/pages/{page_id}", headers=headers, json=data)
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    payload = request.json
+@app.post("/api/webhook")
+async def webhook(request: Request):
+    payload = await request.json()
 
     if "repository" in payload:
         repo_name = payload["repository"]["name"]
@@ -58,8 +57,4 @@ def webhook():
         commit_date = last_commit["timestamp"]
         update_last_commit(repo_name, commit_msg, commit_date)
 
-    return jsonify({"status": "ok"})
-
-# 👇 Export `app` for Vercel
-def handler(request, *args, **kwargs):
-    return app(request.environ, start_response=lambda status, headers: None)
+    return {"status": "ok"}
