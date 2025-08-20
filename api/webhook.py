@@ -6,6 +6,9 @@ import os
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
 
+print("DEBUG NOTION_TOKEN:", NOTION_TOKEN is not None)
+print("DEBUG DATABASE_ID:", DATABASE_ID)
+
 headers = {
     "Authorization": f"Bearer {NOTION_TOKEN}",
     "Content-Type": "application/json",
@@ -19,10 +22,10 @@ def create_project_in_notion(repo_name, repo_url):
     print(f"   Repo: {repo_name}, URL: {repo_url}")
 
     data = {
-        "parent": { "database_id": DATABASE_ID },
+        "parent": { "datasbase_id": DATABASE_ID },
         "properties": {
             "Name": {"title": [{"text": {"content": repo_name}}]},
-            "GitHub Link": {"url": repo_url},
+            "Git Link": {"url": repo_url},
             "Status": {"select": {"name": "Ongoing"}},
         }
     }
