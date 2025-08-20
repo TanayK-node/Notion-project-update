@@ -22,11 +22,11 @@ def create_project_in_notion(repo_name, repo_url):
     print(f"   Repo: {repo_name}, URL: {repo_url}")
 
     data = {
-        "parent": { "datasbase_id": DATABASE_ID },
+        "parent": { "database_id": DATABASE_ID },
         "properties": {
             "Name": {"title": [{"text": {"content": repo_name}}]},
             "Git Link": {"url": repo_url},
-            "Status": {"select": {"name": "Ongoing"}},
+            "Status": {"status": {"name": "Ongoing"}},
         }
     }
     response = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
