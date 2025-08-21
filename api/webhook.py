@@ -18,7 +18,7 @@ headers = {
 }
 
 app = FastAPI()
-#testing1.6
+#testing logic update
 
 def fetch_github_repos():
     url = "https://api.github.com/user/repos"
