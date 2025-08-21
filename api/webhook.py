@@ -164,7 +164,7 @@ async def webhook(request: Request):
         commit_msg = last_commit["message"]
         commit_date = last_commit["timestamp"]
 
-    # Call upsert logic test2
+    # Call upsert logic test3
     upsert_repo_in_notion(repo_name, repo_url, commit_msg, commit_date)
 
     return {"status": "ok"}
