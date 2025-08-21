@@ -16,7 +16,7 @@ headers = {
 }
 
 app = FastAPI()
-#testing1.5
+#testing1.6
 def create_project_in_notion(repo_name, repo_url):
     print("📌 Creating project in Notion...")
     print(f"   Repo: {repo_name}, URL: {repo_url}")
@@ -26,7 +26,7 @@ def create_project_in_notion(repo_name, repo_url):
         "properties": {
             "Name": {"title": [{"text": {"content": repo_name}}]},
             "GitHub Link": {"url": repo_url},
-            #"status": {"select": {"name": "Done"}},
+            "Status": {"select": {"name": "Done"}},
         }
     }
     response = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
