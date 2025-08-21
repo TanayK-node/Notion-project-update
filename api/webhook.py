@@ -62,11 +62,15 @@ def create_project_in_notion(repo_name, repo_url):
     print("🔍 Notion Response Body:", response.text)
 
 
-def update_last_commit(repo_name, commit_msg, commit_date):
-    print(f"📌 Updating last commit for {repo_name}...")
-    print(f"   Commit Msg: {commit_msg}")
-    print(f"   Commit Date: {commit_date}")
+def upsert_repo_in_notion(repo_name, repo_url, commit_msg=None, commit_date=None):
+    """
+    Create or update a repo in Notion.
+    If the repo exists, update Last Commit + Date.
+    If it doesn't exist, create a new entry.
+    """
+    print(f"📌 Upserting repo in Notion: {repo_name}")
 
+    # Step 1: Check if repo already exists
     query = requests.post(
         f"https://api.notion.com/v1/databases/{DATABASE_ID}/query",
         headers=headers,
@@ -76,18 +80,55 @@ def update_last_commit(repo_name, commit_msg, commit_date):
     print("🔍 Query Results:", query)
 
     if len(query.get("results", [])) > 0:
+        # Repo already exists → update
         page_id = query["results"][0]["id"]
-        data = {
+        update_data = {
+            "properties": {}
+        }
+
+        if commit_msg:
+            update_data["properties"]["Last Commit"] = {
+                "rich_text": [{"text": {"content": commit_msg}}]
+            }
+
+        if commit_date:
+            update_data["properties"]["Last Commit Date"] = {
+                "date": {"start": commit_date}
+            }
+
+        response = requests.patch(
+            f"https://api.notion.com/v1/pages/{page_id}",
+            headers=headers,
+            json=update_data
+        )
+        print("✅ Updated existing repo:", response.status_code, response.text)
+
+    else:
+        # Repo does not exist → create new entry
+        create_data = {
+            "parent": {"database_id": DATABASE_ID},
             "properties": {
-                "Last Commit": {"rich_text": [{"text": {"content": commit_msg}}]},
-                "Last Commit Date": {"date": {"start": commit_date}}
+                "Name": {"title": [{"text": {"content": repo_name}}]},
+                "GitHub Link": {"url": repo_url},
             }
         }
-        response = requests.patch(f"https://api.notion.com/v1/pages/{page_id}", headers=headers, json=data)
-        print("✅ Notion Update Status:", response.status_code)
-        print("🔍 Notion Update Body:", response.text)
-    else:
-        print("⚠️ No Notion page found for repo:", repo_name)
+
+        if commit_msg:
+            create_data["properties"]["Last Commit"] = {
+                "rich_text": [{"text": {"content": commit_msg}}]
+            }
+
+        if commit_date:
+            create_data["properties"]["Last Commit Date"] = {
+                "date": {"start": commit_date}
+            }
+
+        response = requests.post(
+            "https://api.notion.com/v1/pages",
+            headers=headers,
+            json=create_data
+        )
+        print("✅ Created new repo:", response.status_code, response.text)
 
 
 @app.get("/")
@@ -103,19 +144,17 @@ async def webhook(request: Request):
     payload = await request.json()
     print("📥 Webhook received:", payload.keys())
 
-    if "repository" in payload:
-        repo_name = payload["repository"]["name"]
-        repo_url = payload["repository"]["html_url"]
-        print(f"📌 Creating project in Notion: {repo_name} ({repo_url})")
-        create_project_in_notion(repo_name, repo_url)
+    repo_name = payload["repository"]["name"]
+    repo_url = payload["repository"]["html_url"]
 
+    commit_msg, commit_date = None, None
     if "commits" in payload and payload["commits"]:
-        repo_name = payload["repository"]["name"]
         last_commit = payload["commits"][-1]
         commit_msg = last_commit["message"]
         commit_date = last_commit["timestamp"]
-        print(f"📝 Updating last commit in Notion: {commit_msg} at {commit_date}")
-        update_last_commit(repo_name, commit_msg, commit_date)
+
+    # Call upsert logic
+    upsert_repo_in_notion(repo_name, repo_url, commit_msg, commit_date)
 
     return {"status": "ok"}
 
