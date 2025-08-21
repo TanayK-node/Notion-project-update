@@ -5,6 +5,8 @@ import os
 #testing1.1
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
 
 print("DEBUG NOTION_TOKEN:", NOTION_TOKEN is not None)
 print("DEBUG DATABASE_ID:", DATABASE_ID)
@@ -17,6 +19,32 @@ headers = {
 
 app = FastAPI()
 #testing1.6
+
+def fetch_github_repos():
+    url = "https://api.github.com/user/repos"
+    headers_github = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    repos = []
+    page = 1
+
+    while True:
+        response = requests.get(f"{url}?per_page=100&page={page}", headers=headers_github)
+        if response.status_code != 200:
+            print("⚠️ GitHub API Error:", response.status_code, response.text)
+            break
+
+        data = response.json()
+        if not data:
+            break  # no more repos
+
+        repos.extend(data)
+        page += 1
+
+    return repos
+
+
 def create_project_in_notion(repo_name, repo_url):
     print("📌 Creating project in Notion...")
     print(f"   Repo: {repo_name}, URL: {repo_url}")
@@ -26,7 +54,7 @@ def create_project_in_notion(repo_name, repo_url):
         "properties": {
             "Name": {"title": [{"text": {"content": repo_name}}]},
             "GitHub Link": {"url": repo_url},
-            "Status": {"select": {"name": "Done"}},
+            #"Status": {"select": {"name": "Done"}},
         }
     }
     response = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
@@ -91,3 +119,15 @@ async def webhook(request: Request):
 
     return {"status": "ok"}
 
+@app.post("/api/sync_repos")
+def sync_repos():
+    print("📌 Syncing all GitHub repos...")
+    repos = fetch_github_repos()
+
+    for repo in repos:
+        repo_name = repo["name"]
+        repo_url = repo["html_url"]
+        print(f"➡️ Adding repo to Notion: {repo_name}")
+        create_project_in_notion(repo_name, repo_url)
+
+    return {"status": "done", "repos_synced": len(repos)}
