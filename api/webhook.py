@@ -158,6 +158,7 @@ async def webhook(request: Request):
 
     return {"status": "ok"}
 
+@app.get("/api/sync_repos")
 @app.post("/api/sync_repos")
 def sync_repos():
     print("📌 Syncing all GitHub repos...")
@@ -166,7 +167,8 @@ def sync_repos():
     for repo in repos:
         repo_name = repo["name"]
         repo_url = repo["html_url"]
-        print(f"➡️ Adding repo to Notion: {repo_name}")
-        create_project_in_notion(repo_name, repo_url)
+        print(f"➡️ Adding/Updating repo in Notion: {repo_name}")
+        # Use upsert instead of always creating
+        upsert_repo_in_notion(repo_name, repo_url)
 
     return {"status": "done", "repos_synced": len(repos)}
