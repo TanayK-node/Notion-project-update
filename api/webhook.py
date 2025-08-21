@@ -130,6 +130,17 @@ def upsert_repo_in_notion(repo_name, repo_url, commit_msg=None, commit_date=None
         )
         print("✅ Created new repo:", response.status_code, response.text)
 
+def fetch_latest_commit(repo):
+    commits_url = repo["commits_url"].replace("{/sha}", "")
+    response = requests.get(commits_url, headers={
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    })
+    if response.status_code == 200 and response.json():
+        latest_commit = response.json()[0]
+        return latest_commit["commit"]["message"], latest_commit["commit"]["author"]["date"]
+    return None, None
+
 
 @app.get("/")
 def root():
@@ -167,8 +178,10 @@ def sync_repos():
     for repo in repos:
         repo_name = repo["name"]
         repo_url = repo["html_url"]
+
+        commit_msg, commit_date = fetch_latest_commit(repo)
+
         print(f"➡️ Adding/Updating repo in Notion: {repo_name}")
-        # Use upsert instead of always creating
-        upsert_repo_in_notion(repo_name, repo_url)
+        upsert_repo_in_notion(repo_name, repo_url, commit_msg, commit_date)
 
     return {"status": "done", "repos_synced": len(repos)}
