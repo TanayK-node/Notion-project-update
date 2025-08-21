@@ -16,7 +16,7 @@ headers = {
 }
 
 app = FastAPI()
-#testing1.3
+#testing1.4
 def create_project_in_notion(repo_name, repo_url):
     print("📌 Creating project in Notion...")
     print(f"   Repo: {repo_name}, URL: {repo_url}")
