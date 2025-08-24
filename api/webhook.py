@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 import requests
 import os
 
-#testing1.1
+#sanity
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
