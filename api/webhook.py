@@ -70,7 +70,7 @@ def upsert_repo_in_notion(repo_name, repo_url, commit_msg=None, commit_date=None
     """
     print(f"📌 Upserting repo in Notion: {repo_name}")
 
-    # Step 1: Check if repo already exists
+    # Step 1: Check if repo already exists fml
     query = requests.post(
         f"https://api.notion.com/v1/databases/{DATABASE_ID}/query",
         headers=headers,
